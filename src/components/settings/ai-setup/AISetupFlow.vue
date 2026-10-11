@@ -8,7 +8,9 @@ import { useI18n } from '@open-pencil/vue'
 import type { AISetupEntry } from '@/app/ai/models/settings/onboarding/dialog'
 import type { OnboardingAccess } from '@/app/ai/models/settings/onboarding/plan'
 import { AI_SETUP_STEPS, useAIOnboarding } from '@/app/ai/models/settings/onboarding/use'
+import { shouldAskUsageStats } from '@/app/telemetry'
 import SettingsSaveFeedback from '@/components/settings/layout/SettingsSaveFeedback.vue'
+import UsageStatsQuestion from '@/components/sharing/UsageStatsQuestion.vue'
 import AppButton from '@/components/ui/button/AppButton.vue'
 import { AppDialogBody, AppDialogFooter, AppDialogHeader } from '@/components/ui/dialog'
 import AppAlert from '@/components/ui/feedback/AppAlert.vue'
@@ -33,6 +35,8 @@ const { answers, step, recommended, plan, roles, gaps, hasDesign, busy, saveResu
   onboarding
 const { isRecommended } = roles
 const phase = ref<'welcome' | 'wizard' | 'saved'>(entry === 'welcome' ? 'welcome' : 'wizard')
+/** Decided once, so the question stays to show the answer after it is given. */
+const askUsageStats = entry === 'welcome' && shouldAskUsageStats()
 
 const goals = computed(() => [
   {
@@ -102,10 +106,13 @@ async function finish(): Promise<void> {
 
   <AppDialogBody>
     <div :class="styles.body()" :data-ai-setup-step="phase === 'wizard' ? step : phase">
-      <section v-if="phase === 'welcome'" :class="styles.intro()">
-        <h3 :class="styles.introHeading()">{{ ai.aiSetupWelcomeAITitle }}</h3>
-        <p :class="styles.introText()">{{ ai.aiSetupWelcomeAIDescription }}</p>
-      </section>
+      <template v-if="phase === 'welcome'">
+        <section :class="styles.intro()">
+          <h3 :class="styles.introHeading()">{{ ai.aiSetupWelcomeAITitle }}</h3>
+          <p :class="styles.introText()">{{ ai.aiSetupWelcomeAIDescription }}</p>
+        </section>
+        <UsageStatsQuestion v-if="askUsageStats" framed />
+      </template>
 
       <template v-else-if="phase === 'saved'">
         <AISetupReview :plan="plan" />

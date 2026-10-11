@@ -25,6 +25,9 @@ jobs:
         run: bun run format:check
 
       - run: bun run build
+        env:
+          # Official releases only: lets the app send its daily ping and, with consent, usage stats.
+          VITE_OPENPENCIL_FEEDBACK: "on"
 
       - uses: cloudflare/wrangler-action@v4
         with:

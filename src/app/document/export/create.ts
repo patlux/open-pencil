@@ -12,6 +12,7 @@ import {
   type ExportedFile
 } from '@/app/document/export/files'
 import type { ExportOptions } from '@/app/document/export/types'
+import { trackDocumentFormat } from '@/app/telemetry'
 
 type DownloadBlob = (data: Uint8Array, filename: string, mime: string) => void
 
@@ -47,6 +48,7 @@ export function createDocumentExportActions(
       editor.renderer ? { canvasKit: editor.renderer.ck, renderer: editor.renderer } : undefined
     )
 
+    trackDocumentFormat('document_exported', formatId)
     const baseName = getExportBaseName(editor.graph, target)
     return {
       bytes: getExportBytes(result.data),
