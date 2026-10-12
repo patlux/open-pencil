@@ -3,7 +3,7 @@
 set -euo pipefail
 
 repo_root="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
-app="$repo_root/desktop/target/release/bundle/macos/OpenPencil.app"
+app="$repo_root/local/dist/OpenPencil.app"
 target="/Applications/OpenPencil.app"
 
 [[ -d "$app" ]] || { echo "error: $app missing; run local/build-macos.sh first" >&2; exit 1; }

@@ -14,7 +14,14 @@ bun install --frozen-lockfile
 # mbx runs the Cargo build with the shared local compiler cache.
 bun run tauri build --bundles app --runner mbx --config local/tauri.local.conf.json
 
-app="$repo_root/desktop/target/release/bundle/macos/OpenPencil.app"
+# desktop/target links to an mbx-managed directory that mbx may prune at any
+# time, so keep the finished app in local/dist.
+built="$repo_root/desktop/target/release/bundle/macos/OpenPencil.app"
+app="$repo_root/local/dist/OpenPencil.app"
+codesign --verify --deep --strict "$built"
+rm -rf "$app"
+mkdir -p "$(dirname "$app")"
+ditto "$built" "$app"
 codesign --verify --deep --strict "$app"
 printf 'built %s (version %s)\n' "$app" \
   "$(/usr/libexec/PlistBuddy -c 'Print :CFBundleShortVersionString' "$app/Contents/Info.plist")"
