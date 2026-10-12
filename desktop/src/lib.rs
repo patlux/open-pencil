@@ -6,6 +6,8 @@ mod http;
 mod menu;
 mod menu_events;
 #[cfg(target_os = "macos")]
+mod webview_activity;
+#[cfg(target_os = "macos")]
 mod window;
 
 use credentials::{
@@ -348,6 +350,22 @@ pub fn run() {
             // to `on_open_url` and is no longer in `current` by the time it is read.
             if let Ok(Some(urls)) = app.deep_link().get_current() {
                 queue_deep_links(app.handle(), urls);
+            }
+
+            // Agents drive the editor through MCP while its window is often not visible.
+            #[cfg(target_os = "macos")]
+            {
+                let app_nap_disabled = webview_activity::disable_app_nap();
+                eprintln!("[webview] App Nap disabled: {app_nap_disabled}");
+                if let Some(window) = app.get_webview_window("main") {
+                    let _ = window.with_webview(|webview| {
+                        // SAFETY: Tauri passes the live WKWebView and runs this on the main thread.
+                        let disabled = unsafe {
+                            webview_activity::disable_occlusion_detection(webview.inner().cast())
+                        };
+                        eprintln!("[webview] occlusion detection disabled: {disabled}");
+                    });
+                }
             }
 
             Ok(install_app_menu(app.handle(), &[])?)
